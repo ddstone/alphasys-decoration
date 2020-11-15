@@ -3,10 +3,10 @@ import PIL.Image
 import io
 import base64
 import json
-from websocket import create_connection
+import os
 
 
-SINK_WS_ADDR = "ws://localhost:8080/websocket"
+SINK_WS_ADDR = "ws://192.168.2.3:5000/websocket"
 
 
 def parse_by_prefix(sink_path):
@@ -14,7 +14,6 @@ def parse_by_prefix(sink_path):
     fid_str, res = prefix.split('_', 1)
 
     def parse_subset(subset):
-        print(subset)
         head, gen = subset.rsplit('-', 1)
         x1, y1, x2, y2, age = list(map(lambda x: int(x), head.split('-')))
         return x1, y1, x2, y2, age, gen
@@ -27,10 +26,9 @@ def parse_by_prefix(sink_path):
 def main():
     sink_path = sys.argv[1]
     fid, faces = parse_by_prefix(sink_path)
-    print(fid, faces)
     img = PIL.Image.open(sink_path)
-    # ws = create_connection(SINK_WS_ADDR)
 
+    str2print = ''
     for x1, y1, x2, y2, age, gen in faces:
         face = img.crop((x1, y1, x2, y2))
 
@@ -40,29 +38,33 @@ def main():
         encoded = base64.b64encode(face_byte_arr)
         encoded_str = 'data:image/jpeg;base64,' \
                       + encoded.decode('utf-8')
-        print(len(encoded_str))
+        # str2print += f'{age}-{gen}-{encoded_str}|'
+        str2print += f'{age}-{gen}-encoded_str|'
+        # print(len(encoded_str))
 
-        print(age, gen)
-        result = {
-            'Age': age,
-            'Gender': gen,
-            'BinData': encoded_str
-        }
-        jresult = json.dumps(result)
-        # ws.send(jresult)
+        # print(age, gen)
+        # result = {
+        #     'Age': age,
+        #     'Gender': gen,
+        #     'BinData': encoded_str
+        # }
+        # jresult = json.dumps(result)
 
-        result = None
-        print('Decode!')
-        result1 = json.loads(jresult)
-        age1, gen1 = result1['Age'], result1['Gender']
-        print(age1, gen1)
-        prefix, face1_byte_str = result1['BinData'].split(',', 1)
-        print(prefix)
-        face1_bytes = base64.b64decode(str.encode(face1_byte_str))
-        face1 = PIL.Image.open(io.BytesIO(face1_bytes))
-        face1.show()
+    str2print = str2print[:-1]
+    os.system(
+        f'echo \'{str2print}\''
+    )
 
-    # ws.close()
+    # result = None
+    # print('Decode!')
+    # result1 = json.loads(jresult)
+    # age1, gen1 = result1['Age'], result1['Gender']
+    # print(age1, gen1)
+    # prefix, face1_byte_str = result1['BinData'].split(',', 1)
+    # print(prefix)
+    # face1_bytes = base64.b64decode(str.encode(face1_byte_str))
+    # face1 = PIL.Image.open(io.BytesIO(face1_bytes))
+    # face1.show()
 
 
 if __name__ == '__main__':
