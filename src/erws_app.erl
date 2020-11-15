@@ -22,9 +22,7 @@ start(_StartType, _StartArgs) ->
     {ok, _} = cowboy:start_http(http, 100, [{port, 10100}],
         [{env, [{dispatch, Dispatch}]}]),
     
-    %% SinkDir = "/apps/china_mobile_v2/sink",
-    SinkDir = "/home/ddstone/hack/tweak/cmobile/erws",
-    ok = sink_watcher:start(SinkDir),
+    ok = sink_watcher:start(),
     erws_sup:start_link().
 
 stop(_State) ->
